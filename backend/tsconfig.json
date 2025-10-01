@@ -1,0 +1,41 @@
+{
+  "compilerOptions": {
+    /* 📁 Project Structure */
+    "rootDir": "./src",        // Your source code folder
+    "outDir": "./dist",        // Compiled JS files go here
+
+    /* ⚙️ Module + Target */
+    "module": "NodeNext",      // For ESM (import/export)
+    "moduleResolution": "NodeNext",
+    "target": "ES2024",        // Latest ECMAScript version
+
+    /* 🧠 Type Support */
+    "lib": ["ESNext"],
+    "types": ["node"],
+
+    /* 🧭 Output Options */
+    "sourceMap": true,
+    "declaration": true,
+    "declarationMap": true,
+
+    /* 🔒 Strict Type Checking */
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
+
+    /* 💅 Style Options (Optional but Good Practice) */
+    "noImplicitReturns": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+
+    /* 🧩 Module Behavior */
+    "isolatedModules": true,
+    "verbatimModuleSyntax": false,
+    "moduleDetection": "force",
+    "skipLibCheck": true,
+    "esModuleInterop": true,        
+    "allowSyntheticDefaultImports": true
+  },
+  "include": ["src"],           // Tell TS to compile src/
+  "exclude": ["node_modules"]   // Ignore node_modules
+}
