@@ -2,7 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import ConnectDb from './config/db.js';
-
+import userAuthRouter from './router/userAuthRoute.js'
 dotenv.config();
 
 const app = express();
@@ -14,7 +14,7 @@ app.use(express.json());
 app.get('/', (req, res) => {
   res.json({ message: "Welcome to the Note app" });
 });
-
+app.use('/api/user', userAuthRouter)
 ConnectDb()
   .then(() => {
     app.listen(PORT, () => {
