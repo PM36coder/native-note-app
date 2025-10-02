@@ -5,7 +5,7 @@ import jwt from 'jsonwebtoken'
 const userRegister = async (req: Request, res: Response): Promise<void> => {
     try {
         // Extract data from request body
-        const { fullName, email, password } = req.body;
+        const { fullName, email, password } = req.body as { fullName: string; email:string; password: string}
 
         // Validate input
         if (!fullName || !email || !password) {
