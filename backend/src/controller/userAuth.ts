@@ -67,9 +67,22 @@ const userLogin = async(req: Request, res: Response): Promise<void>=>{
         const user = await User.findOne({email})
             if(!user){
                 res.status(400).json({message: "User not found, please register"})
+                return
             }
-        
+        const isMatchPassword = await bcrypt.compare(password, user!.password)
+            if(!isMatchPassword){
+                res.status(400).json({message: "Invalid credentials"})
+                return
+            }
+            user.password = undefined as any
+            //* create token
+            const token = jwt.sign({userId: user._id, email: user.email,fullName:user.fullName}, process.env.JWT_SECRET as string, {expiresIn : '1h'})
 
+             res.status(200).json({
+                message: "Login successful",
+                user,
+                token
+            })
     } catch (error:any) {
         console.error("Login error:", error.message);
         res.status(500).json({ message: "Internal Server Error" });
