@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import API from '@/assets/components/axios/axios';
 
 export default function Register() {
     type inputFiled = {
@@ -41,23 +42,27 @@ export default function Register() {
 
     setLoading(true);
     try {
-      const response = await fetch('http://localhost:3000/api/auth/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
+      const response = await API.post('/register', {
+       ...formData
       });
 
-      const data = await response.json();
+      const data = await response.data;
       
-      if (response.ok) {
-        Alert.alert('Success', 'Registration successful!');
-        router.push('/login');
-      } else {
-        Alert.alert('Error', data.message);
-      }
+      Alert.alert('Success', data.message || 'Registration successful!');
+      router.push('/login')
+      setLoading(false)
     } catch (error:any) {
-      Alert.alert('Error', 'Something went wrong');
-      console.log('registration error: ', error.message)
+    let errorMessage = 'Something went wrong';
+      if (error.response && error.response.data && error.response.data.message) {
+        
+        errorMessage = error.response.data.message;
+      } else if (error.message) {
+         // Agar network ya koi aur error hai
+        errorMessage = error.message;
+      }
+      
+      Alert.alert('Error', errorMessage);
+      console.log('Login error:', error);
     } finally {
       setLoading(false);
     }

@@ -43,7 +43,7 @@ export default function Login() {
       
       // await AsyncStorage.setItem('token', data.token);
 
-     setLoading(false)
+    //  setLoading(false)
       // router.push('/home');
       
     } catch (error:any) {
