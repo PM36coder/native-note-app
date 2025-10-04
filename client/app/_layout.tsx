@@ -6,9 +6,25 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
   return(
   <SafeAreaProvider>
   <Stack screenOptions={{headerShown:false}}>
+    
+    
+
+    {user ? <>
+    <Stack.Screen name="(tabs)"  />
+    <Stack.Screen 
+      name="edit-note/[id]"
+      options={{
+        title: 'Edit Note',
+        headerShown: true,
+        presentation: 'modal'
+      }}
+    />
+    </>:<>
+    
     <Stack.Screen name="index"/>
     <Stack.Screen name="(auth)"/>
-    {user && <Stack.Screen name="(tabs)"/>}
+   
+    </>}
     
   </Stack>
   </SafeAreaProvider>)

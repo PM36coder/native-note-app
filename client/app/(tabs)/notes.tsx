@@ -13,11 +13,11 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect, useRouter } from 'expo-router';
-import API from '@/assets/components/axios/axios'; // Aapka Axios Instance
+import API from '@/assets/components/axios/axios'; 
 import { useAuth } from '@/assets/components/context/context';
 
 // --- 1. TypeScript Interfaces ---
-// Yeh woh types hain jo aapka backend return karega
+
 interface INote {
   _id: string;
   title: string;
@@ -33,7 +33,7 @@ export default function NotesListScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 const {token} = useAuth()
-  // --- Data Fetching Function ---
+  // Data Fetching Function 
   const fetchNotes = async () => {
     try {
       // API call: /all endpoint se notes lana
@@ -43,13 +43,13 @@ const {token} = useAuth()
         }
       });
       
-      // Response ka data notes state mein set karna
+      // Response ka data notes state mein set 
       // Assuming backend sends data as { notes: [...] }
       setNotes(response.data.notes); 
       
     } catch (error: any) {
       console.error("Error fetching notes:", error.response?.data || error.message);
-      // Agar 401 (Unauthorized) mile to login par bhejna
+      // Agar 401 (Unauthorized) mile to login 
       if (error.response?.status === 401) {
         Alert.alert("Session Expired", "Please log in again.");
         router.replace('/login');
@@ -67,8 +67,9 @@ const {token} = useAuth()
   useFocusEffect(
     useCallback(() => {
       fetchNotes();
-      // Jab screen blur (focus se bahar) ho, tab kuch nahi karna
+      // Jab screen blur  ho, tab kuch nhi kar
       return () => {};
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
   );
 
@@ -79,9 +80,11 @@ const {token} = useAuth()
   };
 
   // --- Note Press Handler ---
-  const handleNotePress = (noteId: string) => {
-    // User ko Edit/View Note Screen par bhejte hain, ID ke saath
-    // router.push(`edit-note/${noteId}`);
+  const handleEdit = (id: string) => {
+    // User ko Edit/View Note Screen par 
+      console.log('Note ID:', id);  
+  console.log('Pushing to:', `/edit-note/${id}`);
+  router.push(`/edit-note/${id}`);
   };
 
   //! delete note
@@ -103,7 +106,7 @@ const {token} = useAuth()
                   'Authorization': `Bearer ${token}`
                 }
               });
-              //! Note delete hone ke baad, local state se note hata do
+              //! Note delete hone 
               setNotes((prevNotes) => prevNotes.filter((note) => note._id !== id));
             } catch (error: any) {
               console.error("Error deleting note:", error.response?.data || error.message);
@@ -143,7 +146,6 @@ const {token} = useAuth()
   const renderNoteItem = ({ item }: { item: INote }) => (
     <TouchableOpacity 
       style={styles.noteItem}
-      onPress={() => handleNotePress(item._id)}
     >
       <Text style={styles.noteTitle} numberOfLines={1}>
         {item.title || "Untitled Note"}
@@ -155,8 +157,9 @@ const {token} = useAuth()
         {new Date(item.createdAt).toLocaleDateString()}
       </Text>
       <Text style={styles.noteDate}> {new Date(item.createdAt).toLocaleTimeString()}</Text>
-      <Pressable style={{flex:1}} onPress={()=>handleDelete(item._id)}>
-        <Text style={styles.deleteButton}> Delete</Text>
+      <Pressable style={{flex:1 ,flexDirection:'row', gap:10}} >
+        <Text style={styles.deleteButton} onPress={()=>handleDelete(item._id)}> Delete</Text>
+        <Text style={styles.editButton} onPress={()=>handleEdit(item._id)}>Edit</Text>
       </Pressable>
     </TouchableOpacity>
   );
@@ -187,6 +190,16 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
+  },
+  editButton:{
+    color: '#007AFF',
+    fontWeight:'bold',
+    padding:10,
+    backgroundColor: '#f5f5f5',
+    borderRadius: 8,
+    // alignSelf: 'flex-end',
+    fontSize:16,
+    overflow: 'hidden',
   },
   deleteButton:{
     color: 'red',

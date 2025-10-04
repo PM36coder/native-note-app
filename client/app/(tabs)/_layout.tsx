@@ -1,17 +1,16 @@
 import React from 'react';
 import { Tabs } from 'expo-router';
-import Ionicons from '@expo/vector-icons/Ionicons'; // Icons ke liye
+import Ionicons from '@expo/vector-icons/Ionicons'; 
 import { Platform } from 'react-native';
 
-// Tab bar ki styling (aap apne hisaab se badal sakte hain)
 const tabOptions = {
   tabBarActiveTintColor: '#007AFF', // iOS blue
   tabBarInactiveTintColor: '#666',
   tabBarStyle: {
     backgroundColor: '#fff',
     borderTopColor: '#e0e0e0',
-    height: Platform.OS === 'ios' ? 90 : 60, // iOS devices ke liye space
-    paddingBottom: Platform.OS === 'ios' ? 20 : 5, // Icons ke liye padding
+    height: Platform.OS === 'ios' ? 90 : 60, 
+    paddingBottom: Platform.OS === 'ios' ? 20 : 5, 
   },
   headerShown: false, // Hum har screen mein alag se header dikhayenge
 };
