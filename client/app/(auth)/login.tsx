@@ -13,13 +13,14 @@ import {
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import API from '@/assets/components/axios/axios';
+import { useAuth } from '@/assets/components/context/context';
 
 export default function Login() {
   const router = useRouter();
   const [email, setEmail] = useState<string>('');
   const [password, setPassword] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
-
+const {Login} = useAuth()
   const handleLogin = async () => {
     if (!email || !password) {
       Alert.alert('Error', 'Please fill all fields');
@@ -40,11 +41,11 @@ export default function Login() {
       
       Alert.alert('Success', data.message || 'Login successful!');
       
+      await Login(data.user, data.token)
       
-      // await AsyncStorage.setItem('token', data.token);
 
     //  setLoading(false)
-      // router.push('/home');
+      router.push('/(tabs)/notes');
       
     } catch (error:any) {
       
