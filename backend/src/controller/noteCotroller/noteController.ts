@@ -120,4 +120,47 @@ const getAllNotes = async (req: AuthRequest, res: Response): Promise<void> => {
   }
 };
 
-export { createNote, deleteNote, updateNote, getAllNotes };
+
+//! get single note of a user
+const getNoteById = async (req: AuthRequest, res: Response): Promise<void> => {
+  
+    const userId = req.user?.userId;
+    const noteId = req.params.id;
+
+    if (!userId) {
+        res.status(401).json({ message: "Unauthorized: Please login." });
+        return;
+    }
+
+    try {
+        const note = await Note.findById(noteId);
+
+        
+        if (!note) {
+            res.status(404).json({ message: "Note not found." });
+            return;
+        }
+
+        // 3. CORRECTION: Ownership check aur return
+        if (note.user.toString() !== userId) {
+           
+            res.status(401).json({ message: "Unauthorized: You don't own this note." });
+            return;
+        }
+
+        
+        res.status(200).json({ message: "Note fetched successfully", note });
+
+    } catch (error: any) {
+        
+        if (error.name === 'CastError') {
+             res.status(400).json({ message: "Invalid Note ID format." });
+             return;
+        }
+        
+        console.error("error getting note: ", error);
+        res.status(500).json({ message: "Internal server error" });
+    }
+}
+
+export { createNote, deleteNote, updateNote, getAllNotes,getNoteById };
