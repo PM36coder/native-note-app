@@ -8,6 +8,7 @@ import {
   ActivityIndicator,
   Alert,
   RefreshControl,
+  Pressable,
  
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -83,6 +84,37 @@ const {token} = useAuth()
     // router.push(`edit-note/${noteId}`);
   };
 
+  //! delete note
+  const handleDelete = (id:string)=>{
+    Alert.alert(
+      "Delete Note",
+      "Are you sure you want to delete this note?",
+      [
+        {
+          text: "Cancel",
+          style: "cancel"
+        },
+        {
+          text: "Delete",
+          onPress: async () => {
+            try {
+              await API.delete(`/delete/${id}`, {
+                headers: {
+                  'Authorization': `Bearer ${token}`
+                }
+              });
+              //! Note delete hone ke baad, local state se note hata do
+              setNotes((prevNotes) => prevNotes.filter((note) => note._id !== id));
+            } catch (error: any) {
+              console.error("Error deleting note:", error.response?.data || error.message);
+              Alert.alert("Error", "Failed to delete note.");
+            }
+          }
+        }
+      ]
+    );
+  }
+
   // --- Loading UI ---
   if (loading) {
     return (
@@ -123,6 +155,9 @@ const {token} = useAuth()
         {new Date(item.createdAt).toLocaleDateString()}
       </Text>
       <Text style={styles.noteDate}> {new Date(item.createdAt).toLocaleTimeString()}</Text>
+      <Pressable style={{flex:1}} onPress={()=>handleDelete(item._id)}>
+        <Text style={styles.deleteButton}> Delete</Text>
+      </Pressable>
     </TouchableOpacity>
   );
 
@@ -152,6 +187,16 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
+  },
+  deleteButton:{
+    color: 'red',
+  fontWeight: 'bold',
+  padding: 10,
+  backgroundColor: '#f5f5f5',
+  borderRadius: 8,
+  alignSelf: 'flex-start',
+  fontSize:16,
+  overflow: 'hidden',
   },
   headerTitle: {
     fontSize: 28,
