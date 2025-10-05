@@ -16,7 +16,6 @@ import API from "@/assets/components/axios/axios";
 import { useAuth } from "@/assets/components/context/context";
 
 // --- 1. TypeScript Interfaces ---
-
 interface INote {
   _id: string;
   title: string;
@@ -29,31 +28,44 @@ interface INote {
 export default function NotesListScreen() {
   const router = useRouter();
   const [notes, setNotes] = useState<INote[]>([]);
-  const [loading, setLoading] = useState(true);
+  // loading: Notes data fetching state
+  const [loading, setLoading] = useState(true); 
   const [refreshing, setRefreshing] = useState(false);
-  const { token } = useAuth();
-  // Data Fetching Function
-  const fetchNotes = async () => {
+  
+  // FIX: token aur authLoading dono nikaalo
+  const { token, loading: authLoading } = useAuth(); 
+
+  // Data Fetching Function (useCallback use kiya, taaki useFocusEffect mein sahi se kaam kare)
+  const fetchNotes = useCallback(async () => {
+    // Agar token nahi hai, toh fetch nahi karenge
+    if (!token) { 
+        setLoading(false);
+        setRefreshing(false);
+        return;
+    }
+    
+    // Agar refreshing nahi ho raha, toh loading state set karo
+    if(!refreshing) setLoading(true);
+
     try {
-      // API call: /all endpoint se notes lana
       const response = await API.get("/all", {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
 
-      // Response ka data notes state mein set
-      // Assuming backend sends data as { notes: [...] }
       setNotes(response.data.notes);
     } catch (error: any) {
       console.error(
         "Error fetching notes:",
         error.response?.data || error.message
       );
-      // Agar 401 (Unauthorized) mile to login
+      
+      // FIX 1: Agar 401 (Unauthorized) mile, toh login screen par bhej do
       if (error.response?.status === 401) {
         Alert.alert("Session Expired", "Please log in again.");
-        router.replace("/login");
+        // FIX 2: Correct path for login screen
+        router.replace("/(auth)/login");
       } else {
         Alert.alert("Error", "Failed to load notes.");
       }
@@ -61,17 +73,18 @@ export default function NotesListScreen() {
       setLoading(false);
       setRefreshing(false);
     }
-  };
+  }, [token, router, refreshing]); // <-- Dependency Array mein token, router, aur refreshing
 
-  // --- 3. Component Focus Hook ---
-  // Yeh hook har baar chalta hai jab screen focus mein aati hai (jaise tab change karne par)
+  // --- 3. Component Focus Hook (FIXED) ---
+  // Yeh hook har baar chalta hai jab screen focus mein aati hai
   useFocusEffect(
     useCallback(() => {
-      fetchNotes();
-      // Jab screen blur  ho, tab kuch nhi kar
+      // FIX 3: Fetching sirf tab shuru karo jab AuthProvider ne data loading complete kar li ho
+      if (!authLoading) {
+        fetchNotes();
+      }
       return () => {};
-      // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [])
+    }, [authLoading, fetchNotes]) // <-- authLoading aur fetchNotes par depend karega
   );
 
   // --- Pull-to-Refresh Handler ---
@@ -80,11 +93,8 @@ export default function NotesListScreen() {
     fetchNotes();
   };
 
-  // --- Note Press Handler ---
+  // --- Note Press Handler (View/Edit) ---
   const handleEdit = (id: string) => {
-    // User ko Edit/View Note Screen par
-    console.log("Note ID:", id);
-    console.log("Pushing to:", `/edit-note/${id}`);
     router.push(`/edit-note/${id}`);
   };
 
@@ -121,7 +131,8 @@ export default function NotesListScreen() {
   };
 
   // --- Loading UI ---
-  if (loading) {
+  // FIX 4: Auth loading check zaroori hai taaki token load hone tak wait kare
+  if (loading || authLoading) { 
     return (
       <View style={styles.centerContainer}>
         <ActivityIndicator size="large" color="#007AFF" />
@@ -130,13 +141,13 @@ export default function NotesListScreen() {
   }
 
   // --- Empty State UI ---
-  if (notes.length === 0 && !loading) {
+  if (notes.length === 0) {
     return (
       <View style={styles.centerContainer}>
         <Text style={styles.emptyText}>No notes found. Create one!</Text>
         <TouchableOpacity
           style={styles.createButton}
-          onPress={() => router.push("/create")} // 'create' tab par bhejega
+          onPress={() => router.push("/(tabs)/create")} // Correct path to create tab
         >
           <Text style={styles.createButtonText}>+ Create Note</Text>
         </TouchableOpacity>
@@ -146,29 +157,34 @@ export default function NotesListScreen() {
 
   // --- Main Notes List UI ---
   const renderNoteItem = ({ item }: { item: INote }) => (
-    <TouchableOpacity style={styles.noteItem}>
+    // FIX 5: Outer TouchableOpacity par onPress handler add kiya, taki pura note editable ho
+    <TouchableOpacity 
+      style={styles.noteItem}
+      onPress={() => handleEdit(item._id)}
+      activeOpacity={0.8}
+    >
       <Text style={styles.noteTitle} numberOfLines={1}>
         {item.title || "Untitled Note"}
       </Text>
       <Text style={styles.noteContent} numberOfLines={2}>
         {item.content || "Empty content"}
       </Text>
-      <Text style={styles.noteDate}>
-        {new Date(item.createdAt).toLocaleDateString()}
-      </Text>
-     
-      <Pressable style={{ flex: 1, flexDirection: "row", gap: 10 }}>
-        <Text
-          style={styles.deleteButton}
-          onPress={() => handleDelete(item._id)}
-        >
-        
-          Delete
+      
+      {/* Action Buttons Container */}
+      <View style={styles.actionContainer}>
+        <Text style={styles.noteDate}>
+          {new Date(item.createdAt).toLocaleDateString()}
         </Text>
-        <Text style={styles.editButton} onPress={() => handleEdit(item._id)}>
-          Edit
-        </Text>
-      </Pressable>
+        <View style={styles.buttonGroup}>
+            {/* e.stopPropagation() zaroori hai taki delete/edit button dabane par outer TouchableOpacity ka onPress (handleEdit) call na ho */}
+            <Text style={styles.deleteButton} onPress={(e) => { e.stopPropagation(); handleDelete(item._id); }}>
+                Delete
+            </Text>
+            <Text style={styles.editButton} onPress={(e) => { e.stopPropagation(); handleEdit(item._id); }}>
+                Edit
+            </Text>
+        </View>
+      </View>
     </TouchableOpacity>
   );
 
@@ -181,7 +197,6 @@ export default function NotesListScreen() {
         renderItem={renderNoteItem}
         contentContainerStyle={styles.listContent}
         refreshControl={
-          // Pull-to-refresh feature
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
       />
@@ -199,26 +214,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     padding: 20,
-  },
-  editButton: {
-    color: "#007AFF",
-    fontWeight: "bold",
-    padding: 10,
-    backgroundColor: "#f5f5f5",
-    borderRadius: 8,
-    // alignSelf: 'flex-end',
-    fontSize: 16,
-    overflow: "hidden",
-  },
-  deleteButton: {
-    color: "red",
-    fontWeight: "bold",
-    padding: 10,
-    backgroundColor: "#f5f5f5",
-    borderRadius: 8,
-    alignSelf: "flex-start",
-    fontSize: 16,
-    overflow: "hidden",
   },
   headerTitle: {
     fontSize: 28,
@@ -254,10 +249,44 @@ const styles = StyleSheet.create({
     color: "#666",
     marginBottom: 5,
   },
+  // FIX: Action buttons ko better align karne ke liye naya style
+  actionContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 10,
+    borderTopWidth: 1,
+    borderTopColor: '#f0f0f0',
+    paddingTop: 8,
+  },
+  buttonGroup: {
+    flexDirection: 'row',
+    gap: 10,
+  },
   noteDate: {
     fontSize: 12,
     color: "#999",
-    textAlign: "right",
+  },
+  // Custom button styles for better visibility
+  editButton: {
+    color: "#007AFF",
+    fontWeight: "bold",
+    paddingVertical: 5,
+    paddingHorizontal: 10,
+    backgroundColor: "#e0f0ff", // Light blue background
+    borderRadius: 8,
+    fontSize: 14,
+    overflow: "hidden",
+  },
+  deleteButton: {
+    color: "#ff4d4f",
+    fontWeight: "bold",
+    paddingVertical: 5,
+    paddingHorizontal: 10,
+    backgroundColor: "#ffe0e0", // Light red background
+    borderRadius: 8,
+    fontSize: 14,
+    overflow: "hidden",
   },
   emptyText: {
     fontSize: 18,

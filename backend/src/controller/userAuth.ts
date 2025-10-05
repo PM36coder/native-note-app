@@ -2,6 +2,8 @@ import {  User } from "../model/userSchema.js";
 import bcrypt from "bcrypt";
 import { Request, Response } from "express";
 import jwt from 'jsonwebtoken'
+import { sendOtpMail } from "../nodmaileVerify/resetPassOtp.js";
+
 
 
 interface AuthRequest extends Request {
@@ -136,4 +138,82 @@ const user = await User.findById(userId).select('+password')
         res.status(500).json({ message: "Internal Server Error" })
     }
 }
-export { userRegister ,userLogin,changePassword};
+
+const sendOtpUser = async(req:AuthRequest,res:Response):Promise<void>=>{
+    const {email} = req.body as {email:string}
+    try {
+        if(!email){
+            res.status(400).json({message: 'Email is required'})
+            return }
+            
+            const user = await User.findOne({email})
+            if(!user){
+                res.status(404).json({message :'User not found'})
+                return
+            }
+           const otp = Math.floor(100000 + Math.random() * 900000).toString();
+           const otpExpire = new Date(Date.now() + 15 * 60 * 1000);
+
+           // user is guaranteed to exist here
+           (user as any).otp = otp;
+           (user as any).otpExpire = otpExpire;
+
+           await user.save();
+
+           // Optionally send OTP mail (uncomment if sendOtpMail is implemented)
+           await sendOtpMail(user.email, otp)
+            res.status(200).json({message:'OTP sent Successfully'})
+    } catch (error:any) {
+        console.error("Error in OTP sending:", error.message);
+        res.status(500).json({ message: "Internal Server Error" })
+    }
+}
+
+//! reset the password using otp
+
+const resetUserPassword = async(req:AuthRequest, res:Response):Promise<void>=>{
+    const {email, otp , newPassword} = req.body as {email:string, otp:string, newPassword:string}
+    
+    try {
+        // 1. Initial Validation
+        if(!email || !otp || !newPassword){
+            res.status(400).json({message: 'All fields are required'}) 
+            return; 
+        }
+        
+        
+        if (newPassword.length < 8) {
+             res.status(400).json({ message: "New password must be at least 8 characters long." });
+             return;
+        }
+
+        // 3. COMBINED FIND: Check email, OTP, aur expiry date in one go
+        const user = await User.findOne({
+            email,
+            otp: otp,
+            otpExpire: { $gt: Date.now() } // OTP is valid if expiration time is Greater Than ($gt) current time
+        });
+
+        if(!user){
+            // Agar user yahan nahi mila, toh OTP galat/expired hai, ya email match nahi hua.
+            res.status(400).json({message: 'Invalid or expired OTP/Reset Request.'})
+            return
+        }
+        
+        // 4. Update Password, Clear OTP fields
+        user.password = await bcrypt.hash(newPassword, 10)
+        user.otp = null;      // Security: OTP clear karo
+        user.otpExpire = null; // Security: Expiry time clear karo
+        
+        await user.save()
+
+        // 5. Success
+        res.status(200).json({message:'Password reset successful. Please log in.'})
+        
+    } catch (error:any) {
+         console.error("Error in password reset:", error.message);
+         res.status(500).json({ message: "Internal Server Error" }) 
+    }
+}
+
+export { userRegister ,userLogin,changePassword,sendOtpUser,resetUserPassword};

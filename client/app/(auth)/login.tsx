@@ -118,8 +118,9 @@ const {Login} = useAuth()
             <Text style={styles.loginButtonText}>
               {loading ? 'Please wait...' : 'Login'}
             </Text>
+            
           </TouchableOpacity>
-
+<Text onPress={()=> router.push('/(auth)/forogot-password')} style={{textAlign: 'center', marginTop: 16, color: '#007AFF'}}>Forgot Password</Text>
           <View style={styles.registerLink}>
             <Text style={styles.registerText}>Don&apos;t have an account? </Text>
             <TouchableOpacity onPress={() => router.push('/register')}>
