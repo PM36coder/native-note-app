@@ -45,7 +45,7 @@ const {Login} = useAuth()
       
 
     //  setLoading(false)
-      router.push('/(tabs)/notes');
+      router.replace('/(tabs)/notes');
       
     } catch (error:any) {
       
@@ -69,7 +69,7 @@ const {Login} = useAuth()
   return (
     <SafeAreaView style={styles.container}>
       <KeyboardAvoidingView 
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        behavior={Platform.OS === 'ios' ? 'height' : 'padding'}
         style={styles.content}
       >
         {/* Header */}

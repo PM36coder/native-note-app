@@ -2,6 +2,11 @@ import {  User } from "../model/userSchema.js";
 import bcrypt from "bcrypt";
 import { Request, Response } from "express";
 import jwt from 'jsonwebtoken'
+
+
+interface AuthRequest extends Request {
+  user?: { userId: string };
+}
 const userRegister = async (req: Request, res: Response): Promise<void> => {
     try {
         // Extract data from request body
@@ -89,4 +94,46 @@ const userLogin = async(req: Request, res: Response): Promise<void>=>{
     }
 }
 
-export { userRegister ,userLogin};
+
+//!change password
+
+const changePassword = async(req:AuthRequest, res:Response):Promise<void>=>{
+
+    const userId = req.user?.userId
+    const {currentPassword, newPassword} = req.body as{currentPassword:string,newPassword:string}
+
+    try {
+        
+        if(!userId){
+            res.status(401).json({message:"Unauthorized"})
+            return
+        }
+        if(!currentPassword || !newPassword){
+            res.status(400).json({message:'All fields are required'})
+            return
+        }
+
+const user = await User.findById(userId).select('+password')
+
+        if(!user){
+            res.status(404).json({message:"User not found"})
+            return
+        }
+
+        const isMatchPassword = await bcrypt.compare(currentPassword, user.password)
+        if(!isMatchPassword){
+            res.status(400).json({message:"Current password is incorrect"})
+            return
+        }
+
+        user.password = await bcrypt.hash(newPassword, 10)
+        await user.save()
+
+        res.status(200).json({message:"Password changed successfully"})
+
+    } catch (error:any) {
+        console.error("Login error:", error.message);
+        res.status(500).json({ message: "Internal Server Error" })
+    }
+}
+export { userRegister ,userLogin,changePassword};
