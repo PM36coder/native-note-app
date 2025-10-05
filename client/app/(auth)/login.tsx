@@ -8,7 +8,8 @@ import {
   
   KeyboardAvoidingView,
   Platform,
-  Alert
+  Alert,
+  ScrollView
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -72,6 +73,7 @@ const {Login} = useAuth()
         behavior={Platform.OS === 'ios' ? 'height' : 'padding'}
         style={styles.content}
       >
+        <ScrollView contentContainerStyle={styles.scrollContent}>
         {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity onPress={() => router.back()}>
@@ -125,6 +127,7 @@ const {Login} = useAuth()
             </TouchableOpacity>
           </View>
         </View>
+        </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
@@ -137,6 +140,10 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
+    // padding: 24,
+  },
+  scrollContent:{
+flexGrow: 1, 
     padding: 24,
   },
   header: {

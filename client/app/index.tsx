@@ -97,8 +97,10 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   features: {
+    flex:1,
     flexDirection: 'row',
-    justifyContent: 'space-around',
+    // justifyContent: 'space-between',
+    gap:5,
     marginVertical: 40,
   },
   featureItem: {
