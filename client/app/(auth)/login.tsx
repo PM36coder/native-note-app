@@ -76,9 +76,7 @@ const {Login} = useAuth()
         <ScrollView contentContainerStyle={styles.scrollContent}>
         {/* Header */}
         <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.back()}>
-            <Text style={styles.backButton}>← Back</Text>
-          </TouchableOpacity>
+       
           <Text style={styles.title}>Welcome Back!</Text>
           <Text style={styles.subtitle}>Login to continue</Text>
         </View>
